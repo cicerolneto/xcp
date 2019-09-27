@@ -1,0 +1,41 @@
+docker pull centos:7.5.1804
+chcon -Rt svirt_sandbox_file_t /home/samuel/repos
+chcon -Rt svirt_sandbox_file_t /home/samuel/git
+docker run --rm -i -t -v /home/samuel/repos:/data -v /home/samuel/git/xcp/:/xcp centos:7.5.1804
+
+VERSION=8.0
+\rm /etc/yum.repos.d/*.repo
+curl https://raw.githubusercontent.com/xcp-ng/xcp-ng-release/v%{VERSION}.0/xcp-ng.repo | sed 's/enabled=0/enabled=1/' > /etc/yum.repos.d/xcp-ng.repo
+curl https://xcp-ng.org/RPM-GPG-KEY-xcpng > /etc/pki/rpm-gpg/RPM-GPG-KEY-xcpng
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-xcpng
+
+TMPEMPTYDIR=$(mktemp -d)
+yumdownloader -y --urls xcp-ng-deps --installroot="$TMPEMPTYDIR" # to install the GPG keys into the temp dir
+yumdownloader --quiet \
+              --disableexcludes=all \
+              --installroot="$TMPEMPTYDIR" \
+              --resolve \
+              --urls \
+              xcp-ng-deps 2>&1
+\rm $TMPEMPTYDIR -r
+
+
+
+Then for a given RPM:
+rpm -qp --qf "%{sourcerpm}\n" # get the source rpm
+
+TMPEMPTYDIR=$(mktemp -d)
+yumdownloader -y --urls xcp-ng-deps --installroot="$TMPEMPTYDIR" # to install the GPG keys into the temp dir
+yumdownloader --quiet \
+              --disableexcludes=all \
+              --installroot="$TMPEMPTYDIR" \
+              --resolve \
+              --urls \
+              name_of_rpm 2>&1
+\rm $TMPEMPTYDIR -
+
+
+
+
+Then for a given source RPM:
+
